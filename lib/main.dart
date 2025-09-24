@@ -37,41 +37,8 @@ void main() async {
   runApp(const FolhaViradaApp());
 }
 
-class FolhaViradaApp extends StatefulWidget {
+class FolhaViradaApp extends StatelessWidget {
   const FolhaViradaApp({super.key});
-
-  @override
-  State<FolhaViradaApp> createState() => _FolhaViradaAppState();
-}
-
-class _FolhaViradaAppState extends State<FolhaViradaApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadThemeMode();
-  }
-
-  Future<void> _loadThemeMode() async {
-    // TODO: Carregar tema salvo das preferências
-    // final storageService = getIt<StorageService>();
-    // final savedTheme = await storageService.getThemeMode();
-    // setState(() {
-    //   _themeMode = _parseThemeMode(savedTheme);
-    // });
-  }
-
-  ThemeMode _parseThemeMode(String themeString) {
-    switch (themeString) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +50,9 @@ class _FolhaViradaAppState extends State<FolhaViradaApp> {
       // Temas
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode,
+      themeMode: ThemeMode.system,
 
       // Navegação
-      initialRoute: AppRoutes.home,
       onGenerateRoute: AppRoutes.generateRoute,
 
       // Tela inicial
@@ -98,28 +64,11 @@ class _FolhaViradaAppState extends State<FolhaViradaApp> {
         Locale('pt', 'BR'),
         Locale('en', 'US'),
       ],
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-
-      // Builder para interceptar erros de navegação
-      builder: (context, child) {
-        // Configurar densidade de pixels para diferentes dispositivos
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaleFactor: MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
-          ),
-          child: child ?? const SizedBox(),
-        );
-      },
-
-      // Configurações de scroll
-      scrollBehavior: const MaterialScrollBehavior().copyWith(
-        scrollbars: false,
-        overscroll: false,
-      ),
     );
   }
 }

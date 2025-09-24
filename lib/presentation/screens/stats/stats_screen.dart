@@ -2,7 +2,7 @@
 // Tela de estatísticas de leitura
 
 import 'package:flutter/material.dart';
-import 'package:folhavirada/core/constants/app_strings.dart';
+import 'package:folhavirada/core/constants/app_colors.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -12,154 +12,51 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
+  int _currentYearGoal = 12; // Meta padrão
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.stats),
+        title: const Text('Estatísticas'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // TODO: Atualizar estatísticas
-            },
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showEditGoalDialog(),
+            tooltip: 'Editar meta',
           ),
         ],
       ),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _OverviewStats(),
-            SizedBox(height: 24),
-            _ReadingGoal(),
-            SizedBox(height: 24),
-            _GenreDistribution(),
-            SizedBox(height: 24),
-            _MonthlyProgress(),
-            SizedBox(height: 24),
-            _ReadingInsights(),
+            // Meta anual
+            _buildYearlyGoalCard(),
+            const SizedBox(height: 16),
+
+            // Cards de estatísticas básicas
+            _buildBasicStatsGrid(),
+            const SizedBox(height: 24),
+
+            // Empty state para gráficos
+            _buildEmptyChartsState(),
           ],
         ),
       ),
     );
   }
-}
 
-class _OverviewStats extends StatelessWidget {
-  const _OverviewStats();
+  Widget _buildYearlyGoalCard() {
+    final currentYear = DateTime.now().year;
+    const booksRead = 0; // TODO: Carregar dados reais
+    final progress = _currentYearGoal > 0 ? booksRead / _currentYearGoal : 0.0;
+    final progressPercentage = (progress * 100).round();
 
-  @override
-  Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Visão Geral',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatItem(
-                    icon: Icons.library_books,
-                    title: AppStrings.totalBooks,
-                    value: '0',
-                    color: Colors.blue,
-                  ),
-                ),
-                Expanded(
-                  child: _StatItem(
-                    icon: Icons.check_circle,
-                    title: AppStrings.booksRead,
-                    value: '0',
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatItem(
-                    icon: Icons.menu_book,
-                    title: AppStrings.currentlyReading,
-                    value: '0',
-                    color: Colors.orange,
-                  ),
-                ),
-                Expanded(
-                  child: _StatItem(
-                    icon: Icons.bookmark,
-                    title: AppStrings.wantToReadCount,
-                    value: '0',
-                    color: Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
-
-  const _StatItem({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: color,
-          size: 32,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
-class _ReadingGoal extends StatelessWidget {
-  const _ReadingGoal();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -167,14 +64,15 @@ class _ReadingGoal extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  AppStrings.readingGoal,
-                  style: Theme.of(context).textTheme.titleLarge,
+                  'Meta de Leitura $currentYear',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Editar meta
-                  },
-                  child: const Text('Editar'),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: () => _showEditGoalDialog(),
+                  tooltip: 'Editar meta',
                 ),
               ],
             ),
@@ -185,28 +83,58 @@ class _ReadingGoal extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Meta Anual',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          children: [
+                            TextSpan(
+                              text: '$booksRead',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' de $_currentYearGoal livros',
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 8),
                       Text(
-                        '12 livros', // TODO: Meta real
-                        style: Theme.of(context).textTheme.titleLarge,
+                        booksRead == 0
+                            ? 'Adicione livros para acompanhar seu progresso'
+                            : '$progressPercentage% da meta anual',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Stack(
                     children: [
-                      Text(
-                        'Progresso',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      CircularProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        strokeWidth: 8,
+                        backgroundColor: Colors.grey[300],
+                        color: AppColors.primary,
                       ),
-                      Text(
-                        '0%', // TODO: Progresso real
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Center(
+                        child: Text(
+                          '$progressPercentage%',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                        ),
                       ),
                     ],
                   ),
@@ -215,62 +143,59 @@ class _ReadingGoal extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
-              value: 0.0, // TODO: Progresso real
+              value: progress.clamp(0.0, 1.0),
               backgroundColor: Colors.grey[300],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Faltam 12 livros para atingir sua meta', // TODO: Cálculo real
-              style: Theme.of(context).textTheme.bodySmall,
+              color: AppColors.primary,
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(3),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class _GenreDistribution extends StatelessWidget {
-  const _GenreDistribution();
+  Widget _buildBasicStatsGrid() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            'Total de Livros',
+            '0', // TODO: Carregar dados reais
+            Icons.library_books,
+            AppColors.primary,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            'Páginas Lidas',
+            '0', // TODO: Carregar dados reais
+            Icons.auto_stories,
+            Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
             Text(
-              'Distribuição por Gênero',
-              style: Theme.of(context).textTheme.titleLarge,
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
             ),
-            const SizedBox(height: 16),
-            // TODO: Implementar gráfico de pizza ou barras
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.pie_chart,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(height: 8),
-                    Text('Gráfico será exibido aqui'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             Text(
-              'Sem dados suficientes para exibir distribuição',
+              title,
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
@@ -279,69 +204,66 @@ class _GenreDistribution extends StatelessWidget {
       ),
     );
   }
-}
 
-class _MonthlyProgress extends StatelessWidget {
-  const _MonthlyProgress();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyChartsState() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Progresso Mensal',
-              style: Theme.of(context).textTheme.titleLarge,
+            Icon(
+              Icons.insert_chart_outlined,
+              size: 64,
+              color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
-            // TODO: Implementar gráfico de linha
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            Text(
+              'Gráficos Disponíveis em Breve',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Adicione alguns livros para ver estatísticas detalhadas sobre seus hábitos de leitura.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
                   children: [
-                    Icon(
-                      Icons.show_chart,
-                      size: 48,
-                      color: Colors.grey,
+                    Icon(Icons.pie_chart, color: Colors.blue[300], size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Gêneros',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    SizedBox(height: 8),
-                    Text('Gráfico mensal será exibido aqui'),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _MonthStat(
-                    title: 'Este Mês',
-                    value: '0',
-                    color: Colors.blue,
-                  ),
+                Column(
+                  children: [
+                    Icon(Icons.trending_up, color: Colors.green[300], size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Progresso',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: _MonthStat(
-                    title: 'Mês Passado',
-                    value: '0',
-                    color: Colors.grey,
-                  ),
-                ),
-                Expanded(
-                  child: _MonthStat(
-                    title: 'Média Mensal',
-                    value: '0',
-                    color: Colors.green,
-                  ),
+                Column(
+                  children: [
+                    Icon(Icons.bar_chart, color: Colors.orange[300], size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Mensal',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -350,131 +272,72 @@ class _MonthlyProgress extends StatelessWidget {
       ),
     );
   }
-}
 
-class _MonthStat extends StatelessWidget {
-  final String title;
-  final String value;
-  final Color color;
-
-  const _MonthStat({
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
-class _ReadingInsights extends StatelessWidget {
-  const _ReadingInsights();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  void _showEditGoalDialog() {
+    final controller = TextEditingController(text: _currentYearGoal.toString());
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar Meta de Leitura'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Insights de Leitura',
-              style: Theme.of(context).textTheme.titleLarge,
+              'Quantos livros você quer ler em ${DateTime.now().year}?',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            _InsightItem(
-              icon: Icons.trending_up,
-              title: 'Velocidade de Leitura',
-              description: 'Adicione livros para ver suas estatísticas',
-              color: Colors.blue,
-            ),
-            const SizedBox(height: 12),
-            _InsightItem(
-              icon: Icons.star,
-              title: 'Avaliação Média',
-              description: 'Avalie seus livros para ver a média',
-              color: Colors.amber,
-            ),
-            const SizedBox(height: 12),
-            _InsightItem(
-              icon: Icons.category,
-              title: 'Gênero Favorito',
-              description: 'Leia mais livros para descobrir seu gênero preferido',
-              color: Colors.purple,
+            TextFormField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Meta anual',
+                hintText: 'Digite o número de livros',
+                suffixText: 'livros',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Campo obrigatório';
+                }
+                final number = int.tryParse(value);
+                if (number == null || number <= 0) {
+                  return 'Digite um número válido';
+                }
+                if (number > 365) {
+                  return 'Meta muito alta';
+                }
+                return null;
+              },
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newGoal = int.tryParse(controller.text);
+              if (newGoal != null && newGoal > 0) {
+                setState(() {
+                  _currentYearGoal = newGoal;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Meta atualizada para $newGoal livros!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _InsightItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-
-  const _InsightItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

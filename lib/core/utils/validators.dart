@@ -2,6 +2,7 @@
 // Validadores de formulários e entrada de dados
 
 import 'package:folhavirada/core/constants/app_strings.dart';
+import 'package:folhavirada/core/constants/book_constants.dart';
 
 class Validators {
   /// Validar se o campo não está vazio

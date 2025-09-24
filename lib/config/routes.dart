@@ -2,11 +2,45 @@
 // Sistema de navegação e rotas da aplicação
 
 import 'package:flutter/material.dart';
+import 'package:folhavirada/presentation/screens/book/books_by_author_screen.dart';
+import 'package:folhavirada/presentation/screens/book/books_by_genre_screen.dart';
+import 'package:folhavirada/presentation/screens/book/books_by_status_screen.dart';
+import 'package:folhavirada/presentation/screens/book/edit_book_screen.dart';
+import 'package:folhavirada/presentation/screens/book/search_books_screen.dart';
 import 'package:folhavirada/presentation/screens/home/home_screen.dart';
 import 'package:folhavirada/presentation/screens/book_detail/book_detail_screen.dart';
 import 'package:folhavirada/presentation/screens/stats/stats_screen.dart';
 import 'package:folhavirada/presentation/screens/settings/settings_screen.dart';
+import 'package:folhavirada/presentation/screens/book/add_book_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
 import 'package:folhavirada/core/utils/app_utils.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
+import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
+import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
+import 'package:folhavirada/presentation/screens/about/about_screen.dart';
 
 class AppRoutes {
   // Nomes das rotas
@@ -53,9 +87,7 @@ class AppRoutes {
     } else if (routeName == searchBooks) {
       final initialQuery = args?['query'] as String?;
       return _createRoute(SearchBooksScreen(initialQuery: initialQuery));
-    } else if (routeName == searchOnline) {
-      final initialQuery = args?['query'] as String?;
-      return _createRoute(SearchOnlineScreen(initialQuery: initialQuery));
+    // Busca online removida temporariamente
     } else if (routeName == stats) {
       return _createRoute(const StatsScreen());
     } else if (routeName == settings) {
@@ -97,12 +129,10 @@ class AppRoutes {
         return _createErrorRoute('Author is required');
       }
       return _createRoute(BooksByAuthorScreen(author: author));
-    } else if (routeName == export) {
-      return _createRoute(const ExportScreen());
-    } else if (routeName == import) {
-      return _createRoute(const ImportScreen());
     } else if (routeName == about) {
       return _createRoute(const AboutScreen());
+    } else if (routeName == '/theme') {
+      return _createRoute(const ThemeScreen());
     } else {
       return _createErrorRoute('Route not found: ${settings.name}');
     }
@@ -223,10 +253,10 @@ extension NavigationExtensions on BuildContext {
     return pushNamed(AppRoutes.searchBooks, arguments: {'query': query});
   }
 
-  // Navegar para busca online
-  Future<void> goToSearchOnline([String? query]) {
-    return pushNamed(AppRoutes.searchOnline, arguments: {'query': query});
-  }
+  // Busca online removida temporariamente
+  // Future<void> goToSearchOnline([String? query]) {
+  //   return pushNamed(AppRoutes.searchOnline, arguments: {'query': query});
+  // }
 
   // Navegar para estatísticas
   Future<void> goToStats() {
@@ -269,7 +299,11 @@ extension NavigationExtensions on BuildContext {
   // Navegar para livros por autor
   Future<void> goToBooksByAuthor(String author) {
     return pushNamed(AppRoutes.booksByAuthor, arguments: {'author': author});
-    
+  }
+
+  // Nova extensão para tema
+  Future<void> goToTheme() {
+    return pushNamed('/theme');
   }
 
   // Navegar para exportar dados
@@ -285,170 +319,5 @@ extension NavigationExtensions on BuildContext {
   // Navegar para sobre
   Future<void> goToAbout() {
     return pushNamed(AppRoutes.about);
-  }
-}
-
-// Classes placeholder para as telas (serão implementadas depois)
-class AddBookScreen extends StatelessWidget {
-  final Map<String, dynamic>? initialData;
-
-  const AddBookScreen({super.key, this.initialData});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Add Book Screen - Coming Soon')),
-    );
-  }
-}
-
-class EditBookScreen extends StatelessWidget {
-  final String bookId;
-
-  const EditBookScreen({super.key, required this.bookId});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Edit Book Screen - Coming Soon')),
-    );
-  }
-}
-
-class SearchBooksScreen extends StatelessWidget {
-  final String? initialQuery;
-
-  const SearchBooksScreen({super.key, this.initialQuery});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Search Books Screen - Coming Soon')),
-    );
-  }
-}
-
-class SearchOnlineScreen extends StatelessWidget {
-  final String? initialQuery;
-
-  const SearchOnlineScreen({super.key, this.initialQuery});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Search Online Screen - Coming Soon')),
-    );
-  }
-}
-
-class NotesScreen extends StatelessWidget {
-  final String bookId;
-
-  const NotesScreen({super.key, required this.bookId});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Notes Screen - Coming Soon')),
-    );
-  }
-}
-
-class AddNoteScreen extends StatelessWidget {
-  final String bookId;
-  final int? pageNumber;
-
-  const AddNoteScreen({super.key, required this.bookId, this.pageNumber});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Add Note Screen - Coming Soon')),
-    );
-  }
-}
-
-class EditNoteScreen extends StatelessWidget {
-  final String noteId;
-
-  const EditNoteScreen({super.key, required this.noteId});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Edit Note Screen - Coming Soon')),
-    );
-  }
-}
-
-class BooksByStatusScreen extends StatelessWidget {
-  final String status;
-
-  const BooksByStatusScreen({super.key, required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Books By Status Screen - Coming Soon')),
-    );
-  }
-}
-
-class BooksByGenreScreen extends StatelessWidget {
-  final String genre;
-
-  const BooksByGenreScreen({super.key, required this.genre});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Books By Genre Screen - Coming Soon')),
-    );
-  }
-}
-
-class BooksByAuthorScreen extends StatelessWidget {
-  final String author;
-
-  const BooksByAuthorScreen({super.key, required this.author});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Books By Author Screen - Coming Soon')),
-    );
-  }
-}
-
-class ExportScreen extends StatelessWidget {
-  const ExportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Export Screen - Coming Soon')),
-    );
-  }
-}
-
-class ImportScreen extends StatelessWidget {
-  const ImportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Import Screen - Coming Soon')),
-    );
-  }
-}
-
-class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('About Screen - Coming Soon')),
-    );
   }
 }

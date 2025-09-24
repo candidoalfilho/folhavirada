@@ -150,4 +150,11 @@ class AppStrings {
   static const String invalidYear = 'Ano inválido';
   static const String invalidPages = 'Número de páginas inválido';
   static const String invalidRating = 'Avaliação inválida';
+
+  // Novas strings adicionais
+  static const String addBookTitle = 'Adicionar Livro';
+  static const String searchOnlineHint = 'Digite título, autor ou ISBN...';
+  static const String bookAddedSuccess = 'Livro adicionado com sucesso!';
+  static const String errorAddingBookMsg = 'Erro ao adicionar livro';
+  static const String internetRequiredMsg = 'Conexão com internet necessária';
 }

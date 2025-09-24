@@ -1,9 +1,14 @@
 // 📚 FolhaVirada - Home Screen
-// Tela principal do aplicativo
+// Tela inicial do aplicativo
 
 import 'package:flutter/material.dart';
 import 'package:folhavirada/core/constants/app_strings.dart';
+import 'package:folhavirada/core/constants/app_colors.dart';
 import 'package:folhavirada/config/routes.dart';
+import 'package:folhavirada/core/constants/book_constants.dart';
+import 'package:folhavirada/core/utils/app_utils.dart';
+import 'package:folhavirada/presentation/screens/stats/stats_screen.dart';
+import 'package:folhavirada/presentation/screens/settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,443 +18,158 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const _HomeTab(),
-    const _BooksTab(),
-    const _StatsTab(),
-    const _SettingsTab(),
-  ];
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+        index: _selectedIndex,
+        children: [
+          _buildHomeTab(),
+          _buildBooksTab(),
+          _buildStatsTab(),
+          _buildSettingsTab(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: AppStrings.home,
+            label: 'Início',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_books),
-            label: AppStrings.books,
+            label: 'Livros',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: AppStrings.stats,
+            icon: Icon(Icons.bar_chart),
+            label: 'Estatísticas',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: AppStrings.settings,
+            label: 'Configurações',
           ),
         ],
       ),
-      floatingActionButton: _currentIndex == 1 // Mostrar apenas na aba de livros
+      floatingActionButton: _selectedIndex == 1 
           ? FloatingActionButton(
               onPressed: () => context.goToAddBook(),
               child: const Icon(Icons.add),
+              tooltip: 'Adicionar livro',
             )
           : null,
     );
   }
-}
 
-// Tab Início
-class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+  Widget _buildHomeTab() {
+    return CustomScrollView(
+      slivers: [
+        
+        
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Welcome message
+              const SizedBox(height: 24),
+              _buildWelcomeCard(),
+              const SizedBox(height: 24),
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.appName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.goToSearchBooks(),
+              // Quick actions
+              _buildQuickActionsSection(),
+              const SizedBox(height: 24),
+
+              // Empty state with call to action
+              _buildEmptyLibraryCard(),
+            ]),
           ),
-        ],
-      ),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _WelcomeCard(),
-            SizedBox(height: 24),
-            _CurrentlyReadingSection(),
-            SizedBox(height: 24),
-            _RecentBooksSection(),
-            SizedBox(height: 24),
-            _QuickStatsSection(),
-          ],
         ),
-      ),
+      ],
     );
   }
-}
 
-// Tab Livros
-class _BooksTab extends StatelessWidget {
-  const _BooksTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.books),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.goToSearchBooks(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_download),
-            onPressed: () => context.goToSearchOnline(),
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.library_books,
-              size: 64,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 16),
-            Text(
-              AppStrings.noBooks,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              AppStrings.emptyLibraryMessage,
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Tab Estatísticas
-class _StatsTab extends StatelessWidget {
-  const _StatsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.stats),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.analytics,
-              size: 64,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 16),
-            Text(
-              AppStrings.emptyStats,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              AppStrings.emptyStatsMessage,
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Tab Configurações
-class _SettingsTab extends StatelessWidget {
-  const _SettingsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.settings),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _SettingsSection(
-            title: 'Aparência',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: const Text(AppStrings.theme),
-                subtitle: const Text(AppStrings.systemTheme),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // TODO: Implementar seletor de tema
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          _SettingsSection(
-            title: 'Dados',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.backup),
-                title: const Text(AppStrings.backup),
-                subtitle: const Text('Fazer backup dos seus dados'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.goToExport(),
-              ),
-              ListTile(
-                leading: const Icon(Icons.restore),
-                title: const Text(AppStrings.restore),
-                subtitle: const Text('Restaurar dados de um backup'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.goToImport(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _SettingsSection(
-            title: 'Sobre',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text(AppStrings.about),
-                subtitle: const Text('Informações do aplicativo'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.goToAbout(),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Componentes auxiliares
-
-class _WelcomeCard extends StatelessWidget {
-  const _WelcomeCard();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildWelcomeCard() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.auto_stories,
-                  size: 32,
-                  color: Colors.blue,
+                Icon(
+                  Icons.waving_hand,
+                  color: Colors.amber,
+                  size: 28,
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bem-vindo ao ${AppStrings.appName}!',
-                        style: Theme.of(context).textTheme.titleLarge,
+                Text(
+                  'Bem-vindo!',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Organize sua biblioteca pessoal',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Text(
+              'Organize sua biblioteca pessoal e acompanhe seus hábitos de leitura.',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => context.goToAddBook(),
-                icon: const Icon(Icons.add),
-                label: const Text('Adicionar Primeiro Livro'),
-              ),
+            ElevatedButton.icon(
+              onPressed: () => context.goToAddBook(),
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar Primeiro Livro'),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class _CurrentlyReadingSection extends StatelessWidget {
-  const _CurrentlyReadingSection();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildQuickActionsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppStrings.currentlyReading,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.menu_book,
-                  size: 48,
-                  color: Colors.grey,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    'Nenhum livro sendo lido no momento',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RecentBooksSection extends StatelessWidget {
-  const _RecentBooksSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Adicionados Recentemente',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextButton(
-              onPressed: () {
-                // TODO: Navegar para todos os livros
-              },
-              child: const Text('Ver Todos'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 0, // Temporário
-            itemBuilder: (context, index) {
-              return const SizedBox(); // Placeholder
-            },
-          ),
-        ),
-        if (true) // Se não há livros
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.book,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Nenhum livro adicionado ainda',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
+          'Ações Rápidas',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _QuickStatsSection extends StatelessWidget {
-  const _QuickStatsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Estatísticas Rápidas',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextButton(
-              onPressed: () => context.goToStats(),
-              child: const Text('Ver Mais'),
-            ),
-          ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _StatCard(
-                icon: Icons.library_books,
-                title: AppStrings.totalBooks,
-                value: '0',
-                color: Colors.blue,
+              child: _buildActionCard(
+                'Adicionar Livro',
+                'Cadastre um novo livro',
+                Icons.add_circle_outline,
+                Colors.green,
+                () => context.goToAddBook(),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _StatCard(
-                icon: Icons.check_circle,
-                title: AppStrings.booksRead,
-                value: '0',
-                color: Colors.green,
+              child: _buildActionCard(
+                'Ver Estatísticas',
+                'Acompanhe seu progresso',
+                Icons.analytics_outlined,
+                Colors.blue,
+                () {
+                  setState(() {
+                    _selectedIndex = 2;
+                  });
+                },
               ),
             ),
           ],
@@ -457,81 +177,192 @@ class _QuickStatsSection extends StatelessWidget {
       ],
     );
   }
-}
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
+  Widget _buildActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-  const _StatCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEmptyLibraryCard() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              icon,
-              color: color,
-              size: 32,
+              Icons.library_books_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Sua biblioteca está vazia',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
+              'Comece adicionando seus livros favoritos para acompanhar sua jornada de leitura.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
                   ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () => context.goToAddBook(),
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar Primeiro Livro'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-class _SettingsSection extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SettingsSection({
-    required this.title,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).primaryColor,
+  Widget _buildBooksTab() {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          title: const Text('Meus Livros'),
+          floating: true,
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Filtros por status
+              _buildStatusFilters(),
+              const SizedBox(height: 16),
+              
+              // Empty state
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.library_books,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhum livro encontrado',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Adicione seus primeiros livros para começar',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => context.goToAddBook(),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Adicionar Livro'),
+                      ),
+                    ],
                   ),
-            ),
+                ),
+              ),
+            ]),
           ),
-          ...children,
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusFilters() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildFilterChip('Quero Ler', 0, BookStatus.wantToRead),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildFilterChip('Lendo', 0, BookStatus.reading),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildFilterChip('Lidos', 0, BookStatus.read),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String label, int count, BookStatus status) {
+    return Card(
+      child: InkWell(
+        onTap: () {
+          // TODO: Filtrar por status quando houver dados reais
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Column(
+            children: [
+              Text(
+                count.toString(),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildStatsTab() {
+    return const StatsScreen();
+  }
+
+  Widget _buildSettingsTab() {
+    return const SettingsScreen();
   }
 }
