@@ -17,78 +17,121 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 0;
+  late PageController _pageController;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (_selectedIndex != index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         children: [
-          _buildHomeTab(),
-          _buildBooksTab(),
-          _buildStatsTab(),
-          _buildSettingsTab(),
+          _HomeTab(),
+          _BooksTab(),
+          const StatsScreen(),
+          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: _onItemTapped,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Início',
+            label: AppStrings.home,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_books),
-            label: 'Livros',
+            label: AppStrings.myBooks,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Estatísticas',
+            label: AppStrings.statistics,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Configurações',
+            label: AppStrings.settings,
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 1 
+      floatingActionButton: _selectedIndex == 0 || _selectedIndex == 1
           ? FloatingActionButton(
               onPressed: () => context.goToAddBook(),
               child: const Icon(Icons.add),
-              tooltip: 'Adicionar livro',
+              tooltip: AppStrings.addBook,
             )
           : null,
     );
   }
+}
 
-  Widget _buildHomeTab() {
+class _HomeTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        
-        
+        SliverAppBar(
+          title: const Text(AppStrings.appTitle),
+          floating: true,
+          snap: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () => context.goToSearchBooks(),
+              tooltip: AppStrings.search,
+            ),
+          ],
+        ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Welcome message
+              _buildWelcomeCard(context),
               const SizedBox(height: 24),
-              _buildWelcomeCard(),
+              _buildQuickStats(context),
               const SizedBox(height: 24),
-
-              // Quick actions
-              _buildQuickActionsSection(),
+              _buildQuickActions(context),
               const SizedBox(height: 24),
-
-              // Empty state with call to action
-              _buildEmptyLibraryCard(),
+              _buildRecentBooks(context),
             ]),
           ),
         ),
@@ -96,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeCard() {
+  Widget _buildWelcomeCard(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -105,30 +148,39 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.waving_hand,
-                  color: Colors.amber,
-                  size: 28,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Bem-vindo!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.welcome,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
+                      Text(
+                        'Organize sua biblioteca pessoal',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Organize sua biblioteca pessoal e acompanhe seus hábitos de leitura.',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => context.goToAddBook(),
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar Primeiro Livro'),
             ),
           ],
         ),
@@ -136,7 +188,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActionsSection() {
+  Widget _buildQuickStats(BuildContext context) {
+    // Dados mockados simples - sem processamento pesado
+    final stats = [
+      {'label': 'Total', 'value': '0', 'icon': Icons.library_books},
+      {'label': 'Lendo', 'value': '0', 'icon': Icons.menu_book},
+      {'label': 'Lidos', 'value': '0', 'icon': Icons.check_circle},
+    ];
+
+    return Row(
+      children: stats.map((stat) {
+        return Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(
+                    stat['icon'] as IconData,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    stat['value'] as String,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    stat['label'] as String,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    final actions = [
+      {
+        'title': 'Adicionar Livro',
+        'subtitle': 'Novo livro à biblioteca',
+        'icon': Icons.add_circle,
+        'color': Colors.blue,
+        'onTap': () => context.goToAddBook(),
+      },
+      {
+        'title': 'Buscar Livros',
+        'subtitle': 'Encontre na biblioteca',
+        'icon': Icons.search,
+        'color': Colors.green,
+        'onTap': () => context.goToSearchBooks(),
+      },
+      {
+        'title': 'Estatísticas',
+        'subtitle': 'Progresso de leitura',
+        'icon': Icons.bar_chart,
+        'color': Colors.orange,
+        'onTap': () => context.goToStats(),
+      },
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -146,164 +265,117 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                'Adicionar Livro',
-                'Cadastre um novo livro',
-                Icons.add_circle_outline,
-                Colors.green,
-                () => context.goToAddBook(),
+        const SizedBox(height: 16),
+        ...actions.map((action) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (action['color'] as Color).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  action['icon'] as IconData,
+                  color: action['color'] as Color,
+                ),
               ),
+              title: Text(action['title'] as String),
+              subtitle: Text(action['subtitle'] as String),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: action['onTap'] as VoidCallback,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                'Ver Estatísticas',
-                'Acompanhe seu progresso',
-                Icons.analytics_outlined,
-                Colors.blue,
-                () {
-                  setState(() {
-                    _selectedIndex = 2;
-                  });
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildActionCard(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyLibraryCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+  Widget _buildRecentBooks(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(
-              Icons.library_books_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
             Text(
-              'Sua biblioteca está vazia',
+              'Atividade Recente',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Comece adicionando seus livros favoritos para acompanhar sua jornada de leitura.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () => context.goToAddBook(),
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar Primeiro Livro'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
+            TextButton(
+              onPressed: () {
+                // TODO: Navegar para lista completa
+              },
+              child: const Text('Ver tudo'),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 16),
+        Container(
+          height: 120,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.book_outlined,
+                  size: 48,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Nenhum livro ainda',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                Text(
+                  'Comece adicionando seu primeiro livro!',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildBooksTab() {
+class _BooksTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          title: const Text('Meus Livros'),
+          title: const Text(AppStrings.myBooks),
           floating: true,
+          snap: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () => context.goToSearchBooks(),
+              tooltip: AppStrings.search,
+            ),
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: () {
+                // TODO: Mostrar filtros
+              },
+              tooltip: 'Filtros',
+            ),
+          ],
         ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Filtros por status
-              _buildStatusFilters(),
-              const SizedBox(height: 16),
-              
-              // Empty state
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.library_books,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Nenhum livro encontrado',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Adicione seus primeiros livros para começar',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () => context.goToAddBook(),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Adicionar Livro'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildStatusCards(context),
+              const SizedBox(height: 24),
+              _buildEmptyState(context),
             ]),
           ),
         ),
@@ -311,58 +383,123 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatusFilters() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildFilterChip('Quero Ler', 0, BookStatus.wantToRead),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildFilterChip('Lendo', 0, BookStatus.reading),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildFilterChip('Lidos', 0, BookStatus.read),
-        ),
-      ],
+  Widget _buildStatusCards(BuildContext context) {
+    final statusCards = [
+      {
+        'title': AppStrings.wantToRead,
+        'count': 0,
+        'color': Colors.blue,
+        'icon': Icons.bookmark_border,
+        'onTap': () => context.goToBooksByStatus(BookStatus.wantToRead.label),
+      },
+      {
+        'title': AppStrings.readingNow,
+        'count': 0,
+        'color': Colors.orange,
+        'icon': Icons.menu_book,
+        'onTap': () => context.goToBooksByStatus(BookStatus.reading.label),
+      },
+      {
+        'title': AppStrings.readBooks,
+        'count': 0,
+        'color': Colors.green,
+        'icon': Icons.check_circle,
+        'onTap': () => context.goToBooksByStatus(BookStatus.read.label),
+      },
+    ];
+
+    return Column(
+      children: statusCards.map((card) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: card['onTap'] as VoidCallback,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (card['color'] as Color).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      card['icon'] as IconData,
+                      color: card['color'] as Color,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          card['title'] as String,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        Text(
+                          '${card['count']} ${(card['count'] as int) == 1 ? 'livro' : 'livros'}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildFilterChip(String label, int count, BookStatus status) {
-    return Card(
-      child: InkWell(
-        onTap: () {
-          // TODO: Filtrar por status quando houver dados reais
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Column(
-            children: [
-              Text(
-                count.toString(),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-              ),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.library_books_outlined,
+            size: 80,
+            color: Colors.grey[400],
           ),
-        ),
+          const SizedBox(height: 16),
+          Text(
+            'Sua biblioteca está vazia',
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Comece adicionando livros que você quer ler, está lendo ou já leu',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => context.goToAddBook(),
+            icon: const Icon(Icons.add),
+            label: const Text('Adicionar Primeiro Livro'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  Widget _buildStatsTab() {
-    return const StatsScreen();
-  }
-
-  Widget _buildSettingsTab() {
-    return const SettingsScreen();
   }
 }

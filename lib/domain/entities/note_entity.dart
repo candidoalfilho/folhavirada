@@ -187,6 +187,19 @@ class NoteEntity {
   @override
   int get hashCode => id.hashCode;
 
+  /// Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'bookId': bookId,
+      'title': title,
+      'content': content,
+      'pageNumber': pageNumber,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
   @override
   String toString() {
     return 'NoteEntity{id: $id, bookId: $bookId, title: $title, hasContent: ${content.isNotEmpty}}';

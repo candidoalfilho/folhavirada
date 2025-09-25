@@ -3,6 +3,8 @@
 
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:folhavirada/core/services/local_storage_service.dart';
+import 'package:folhavirada/core/services/app_state_service.dart';
 
 import 'injection.config.dart';
 
@@ -13,9 +15,19 @@ Future<void> configureDependencies() async => getIt.init();
 
 /// Registrar dependências manualmente se necessário
 Future<void> setupDependencies() async {
-  await configureDependencies();
+  try {
+    await configureDependencies();
+  } catch (e) {
+    // If injectable fails, continue with manual setup
+    print('Injectable setup failed: $e');
+  }
   
-  // Registros adicionais podem ser feitos aqui se necessário
-  // Exemplo:
-  // getIt.registerLazySingleton<ExampleService>(() => ExampleService());
+  // Register storage service
+  final storageService = LocalStorageService();
+  await storageService.initialize();
+  getIt.registerSingleton<LocalStorageService>(storageService);
+  
+  // Register app state service
+  final appStateService = AppStateService();
+  getIt.registerSingleton<AppStateService>(appStateService);
 }

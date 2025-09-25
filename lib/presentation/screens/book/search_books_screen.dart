@@ -1,6 +1,7 @@
 // 📚 FolhaVirada - Search Books Screen
 // Tela para buscar livros na biblioteca local
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:folhavirada/core/constants/app_colors.dart';
 import 'package:folhavirada/core/constants/book_constants.dart';
@@ -21,6 +22,7 @@ class SearchBooksScreen extends StatefulWidget {
 class _SearchBooksScreenState extends State<SearchBooksScreen> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
+  Timer? _debounceTimer;
   
   bool _isLoading = false;
   List<Map<String, dynamic>> _searchResults = [];
@@ -37,6 +39,7 @@ class _SearchBooksScreenState extends State<SearchBooksScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -74,8 +77,15 @@ class _SearchBooksScreenState extends State<SearchBooksScreen> {
               ),
               onChanged: (value) {
                 setState(() {});
+                _debounceTimer?.cancel();
                 if (value.isNotEmpty) {
-                  _performSearch();
+                  _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+                    _performSearch();
+                  });
+                } else {
+                  setState(() {
+                    _searchResults = [];
+                  });
                 }
               },
               onSubmitted: (_) => _performSearch(),
@@ -408,49 +418,61 @@ class _SearchBooksScreenState extends State<SearchBooksScreen> {
 
   void _performSearch() async {
     final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      // TODO: Implementar busca real
-      await Future.delayed(const Duration(milliseconds: 500));
+    // Usar Future.microtask para não bloquear a UI
+    await Future.microtask(() async {
+      try {
+        // Simular busca rápida
+        await Future.delayed(const Duration(milliseconds: 200));
 
-      // Dados mockados para demonstração
-      final mockResults = <Map<String, dynamic>>[];
+        // Dados mockados simplificados
+        final mockResults = <Map<String, dynamic>>[];
 
-      if (query.toLowerCase().contains('dom')) {
-        mockResults.add({
-          'id': '1',
-          'title': 'Dom Casmurro',
-          'author': 'Machado de Assis',
-          'status': 'reading',
-          'progress': 0.65,
-        });
+        if (query.toLowerCase().contains('dom')) {
+          mockResults.add({
+            'id': '1',
+            'title': 'Dom Casmurro',
+            'author': 'Machado de Assis',
+            'status': 'reading',
+            'progress': 0.65,
+          });
+        }
+
+        if (query.toLowerCase().contains('senhor')) {
+          mockResults.add({
+            'id': '2',
+            'title': 'O Senhor dos Anéis',
+            'author': 'J.R.R. Tolkien',
+            'status': 'read',
+            'rating': 5.0,
+          });
+        }
+
+        if (mounted) {
+          setState(() {
+            _searchResults = mockResults;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _searchResults = [];
+            _isLoading = false;
+          });
+        }
       }
-
-      if (query.toLowerCase().contains('senhor')) {
-        mockResults.add({
-          'id': '2',
-          'title': 'O Senhor dos Anéis',
-          'author': 'J.R.R. Tolkien',
-          'status': 'read',
-          'rating': 5.0,
-        });
-      }
-
-      setState(() {
-        _searchResults = mockResults;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _searchResults = [];
-        _isLoading = false;
-      });
-    }
+    });
   }
 
   void _handleBookAction(String action, Map<String, dynamic> book) {

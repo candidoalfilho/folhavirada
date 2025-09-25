@@ -9,13 +9,21 @@ class AppStrings {
   // Navigation
   static const String home = 'Início';
   static const String books = 'Livros';
+  static const String myBooks = 'Meus Livros';
   static const String stats = 'Estatísticas';
+  static const String statistics = 'Estatísticas';
   static const String settings = 'Configurações';
+  static const String addBook = 'Adicionar Livro';
+  static const String appTitle = 'FolhaVirada';
+  static const String welcome = 'Bem-vindo ao FolhaVirada!';
+  static const String search = 'Buscar';
 
   // Book Status
   static const String wantToRead = 'Quero ler';
   static const String reading = 'Lendo agora';
+  static const String readingNow = 'Lendo Agora';
   static const String read = 'Lidos';
+  static const String readBooks = 'Lidos';
 
   // Book Details
   static const String title = 'Título';
@@ -37,7 +45,6 @@ class AppStrings {
   static const String delete = 'Excluir';
   static const String save = 'Salvar';
   static const String cancel = 'Cancelar';
-  static const String search = 'Buscar';
   static const String filter = 'Filtrar';
   static const String sort = 'Ordenar';
   static const String share = 'Compartilhar';

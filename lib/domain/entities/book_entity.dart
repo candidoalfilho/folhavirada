@@ -222,6 +222,30 @@ class BookEntity {
   @override
   int get hashCode => id.hashCode;
 
+  /// Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'author': author,
+      'publisher': publisher,
+      'publishedYear': publishedYear,
+      'isbn': isbn,
+      'genre': genre?.name,
+      'description': description,
+      'coverUrl': coverUrl,
+      'coverLocalPath': coverLocalPath,
+      'totalPages': totalPages,
+      'currentPage': currentPage,
+      'status': status.name,
+      'rating': rating,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
   @override
   String toString() {
     return 'BookEntity{id: $id, title: $title, author: $author, status: ${status.label}}';

@@ -19,12 +19,13 @@ StatisticsModel _$StatisticsModelFromJson(Map<String, dynamic> json) =>
       booksThisMonth: (json['booksThisMonth'] as num).toInt(),
       favoriteGenre: json['favoriteGenre'] as String?,
       averageReadingDays: (json['averageReadingDays'] as num).toDouble(),
-      genreDistribution: Map<String, int>.from(
-        json['genreDistribution'] as Map,
-      ),
+      genreDistribution:
+          Map<String, int>.from(json['genreDistribution'] as Map),
       monthlyReading: Map<String, int>.from(json['monthlyReading'] as Map),
-      ratingDistribution: (json['ratingDistribution'] as Map<String, dynamic>)
-          .map((k, e) => MapEntry(k, (e as num).toDouble())),
+      ratingDistribution:
+          (json['ratingDistribution'] as Map<String, dynamic>).map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ),
       calculatedAt: json['calculatedAt'] as String,
     );
 

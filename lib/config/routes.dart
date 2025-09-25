@@ -15,32 +15,9 @@ import 'package:folhavirada/presentation/screens/book/add_book_screen.dart';
 import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
 import 'package:folhavirada/presentation/screens/about/about_screen.dart';
 import 'package:folhavirada/core/utils/app_utils.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
 import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
 import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
 import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
-import 'package:folhavirada/presentation/screens/about/about_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
-import 'package:folhavirada/presentation/screens/about/about_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
-import 'package:folhavirada/presentation/screens/about/about_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
-import 'package:folhavirada/presentation/screens/about/about_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/notes_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/add_note_screen.dart';
-import 'package:folhavirada/presentation/screens/notes/edit_note_screen.dart';
-import 'package:folhavirada/presentation/screens/theme/theme_screen.dart';
-import 'package:folhavirada/presentation/screens/about/about_screen.dart';
 
 class AppRoutes {
   // Nomes das rotas

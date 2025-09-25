@@ -2,7 +2,11 @@
 // Tela de estatísticas de leitura
 
 import 'package:flutter/material.dart';
+import 'package:folhavirada/core/constants/app_strings.dart';
 import 'package:folhavirada/core/constants/app_colors.dart';
+import 'package:folhavirada/core/utils/validators.dart';
+import 'package:folhavirada/core/services/app_state_service.dart';
+import 'package:folhavirada/core/di/injection.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -11,14 +15,42 @@ class StatsScreen extends StatefulWidget {
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen> {
-  int _currentYearGoal = 12; // Meta padrão
+class _StatsScreenState extends State<StatsScreen> with AutomaticKeepAliveClientMixin {
+  final _goalController = TextEditingController();
+  late AppStateService _appState;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _appState = getIt<AppStateService>();
+    _goalController.text = _appState.readingGoal.toString();
+    _appState.addListener(_onStateChanged);
+  }
+
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _appState.removeListener(_onStateChanged);
+    _goalController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estatísticas'),
+        title: const Text(AppStrings.statistics),
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -27,32 +59,30 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Meta anual
-            _buildYearlyGoalCard(),
-            const SizedBox(height: 16),
+        children: [
+          // Meta anual
+          _buildYearlyGoalCard(),
+          const SizedBox(height: 16),
 
-            // Cards de estatísticas básicas
-            _buildBasicStatsGrid(),
-            const SizedBox(height: 24),
+          // Cards de estatísticas básicas
+          _buildBasicStatsGrid(),
+          const SizedBox(height: 24),
 
-            // Empty state para gráficos
-            _buildEmptyChartsState(),
-          ],
-        ),
+          // Empty state para dados futuros
+          _buildEmptyDataState(),
+        ],
       ),
     );
   }
 
   Widget _buildYearlyGoalCard() {
     final currentYear = DateTime.now().year;
-    const booksRead = 0; // TODO: Carregar dados reais
-    final progress = _currentYearGoal > 0 ? booksRead / _currentYearGoal : 0.0;
-    final progressPercentage = (progress * 100).round();
+    final stats = _appState.stats;
+    final readingGoal = _appState.readingGoal;
+    final booksThisYear = stats['booksThisYear'] ?? 0;
+    final progress = readingGoal > 0 ? booksThisYear / readingGoal : 0.0;
 
     return Card(
       child: Padding(
@@ -64,7 +94,7 @@ class _StatsScreenState extends State<StatsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Meta de Leitura $currentYear',
+                  'Meta de $currentYear',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -72,7 +102,6 @@ class _StatsScreenState extends State<StatsScreen> {
                 IconButton(
                   icon: const Icon(Icons.edit, size: 20),
                   onPressed: () => _showEditGoalDialog(),
-                  tooltip: 'Editar meta',
                 ),
               ],
             ),
@@ -83,32 +112,25 @@ class _StatsScreenState extends State<StatsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      RichText(
-                        text: TextSpan(
-                          style: Theme.of(context).textTheme.headlineSmall,
-                          children: [
-                            TextSpan(
-                              text: '$booksRead',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      Text(
+                        '$booksThisYear / $readingGoal livros',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                            TextSpan(
-                              text: ' de $_currentYearGoal livros',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium?.color,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress >= 1.0 ? Colors.green : AppColors.primary,
                         ),
+                        minHeight: 8,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        booksRead == 0
-                            ? 'Adicione livros para acompanhar seu progresso'
-                            : '$progressPercentage% da meta anual',
+                        '${(progress * 100).round()}% da meta atingida',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -116,38 +138,20 @@ class _StatsScreenState extends State<StatsScreen> {
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Stack(
-                    children: [
-                      CircularProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        strokeWidth: 8,
-                        backgroundColor: Colors.grey[300],
-                        color: AppColors.primary,
-                      ),
-                      Center(
-                        child: Text(
-                          '$progressPercentage%',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    progress >= 1.0 ? Icons.emoji_events : Icons.flag,
+                    color: progress >= 1.0 ? Colors.amber : AppColors.primary,
+                    size: 32,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: Colors.grey[300],
-              color: AppColors.primary,
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(3),
             ),
           ],
         ),
@@ -156,116 +160,136 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildBasicStatsGrid() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            'Total de Livros',
-            '0', // TODO: Carregar dados reais
-            Icons.library_books,
-            AppColors.primary,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            'Páginas Lidas',
-            '0', // TODO: Carregar dados reais
-            Icons.auto_stories,
-            Colors.orange,
-          ),
-        ),
-      ],
-    );
-  }
+    final appStats = _appState.stats;
+    final stats = [
+      {
+        'title': 'Total de Livros',
+        'value': '${appStats['totalBooks'] ?? 0}',
+        'subtitle': 'na biblioteca',
+        'icon': Icons.library_books,
+        'color': Colors.blue,
+      },
+      {
+        'title': 'Páginas Lidas',
+        'value': '${appStats['totalPages'] ?? 0}',
+        'subtitle': 'no total',
+        'icon': Icons.auto_stories,
+        'color': Colors.green,
+      },
+      {
+        'title': 'Livros Lidos',
+        'value': '${appStats['readBooks'] ?? 0}',
+        'subtitle': 'concluídos',
+        'icon': Icons.check_circle,
+        'color': Colors.orange,
+      },
+      {
+        'title': 'Lendo Agora',
+        'value': '${appStats['readingBooks'] ?? 0}',
+        'subtitle': 'em progresso',
+        'icon': Icons.menu_book,
+        'color': Colors.amber,
+      },
+    ];
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-            ),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.2,
       ),
+      itemCount: stats.length,
+      itemBuilder: (context, index) {
+        final stat = stats[index];
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (stat['color'] as Color).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    stat['icon'] as IconData,
+                    color: stat['color'] as Color,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  stat['value'] as String,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  stat['title'] as String,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  stat['subtitle'] as String,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildEmptyChartsState() {
+  Widget _buildEmptyDataState() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           children: [
             Icon(
-              Icons.insert_chart_outlined,
+              Icons.bar_chart_outlined,
               size: 64,
               color: Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
-              'Gráficos Disponíveis em Breve',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              'Dados Insuficientes',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Adicione alguns livros para ver estatísticas detalhadas sobre seus hábitos de leitura.',
+              'Adicione livros à sua biblioteca para ver estatísticas detalhadas, gráficos e análises do seu progresso de leitura.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    Icon(Icons.pie_chart, color: Colors.blue[300], size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Gêneros',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Icon(Icons.trending_up, color: Colors.green[300], size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Progresso',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Icon(Icons.bar_chart, color: Colors.orange[300], size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Mensal',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
+            OutlinedButton.icon(
+              onPressed: () {
+                // TODO: Navegar para adicionar livro
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Adicione livros para ver estatísticas!'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar Livros'),
             ),
           ],
         ),
@@ -274,39 +298,36 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _showEditGoalDialog() {
-    final controller = TextEditingController(text: _currentYearGoal.toString());
-    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Editar Meta de Leitura'),
+        title: const Text('Editar Meta Anual'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Quantos livros você quer ler em ${DateTime.now().year}?',
+              'Quantos livros você pretende ler em ${DateTime.now().year}?',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: controller,
-              keyboardType: TextInputType.number,
+              controller: _goalController,
               decoration: const InputDecoration(
-                labelText: 'Meta anual',
-                hintText: 'Digite o número de livros',
-                suffixText: 'livros',
+                labelText: 'Meta de livros',
                 border: OutlineInputBorder(),
+                suffixText: 'livros',
               ),
+              keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Campo obrigatório';
+                  return 'Digite uma meta';
                 }
-                final number = int.tryParse(value);
-                if (number == null || number <= 0) {
-                  return 'Digite um número válido';
+                final goal = int.tryParse(value);
+                if (goal == null || goal <= 0) {
+                  return 'Meta deve ser um número positivo';
                 }
-                if (number > 365) {
-                  return 'Meta muito alta';
+                if (goal > 1000) {
+                  return 'Meta muito alta (máximo 1000)';
                 }
                 return null;
               },
@@ -319,17 +340,22 @@ class _StatsScreenState extends State<StatsScreen> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
-              final newGoal = int.tryParse(controller.text);
-              if (newGoal != null && newGoal > 0) {
-                setState(() {
-                  _currentYearGoal = newGoal;
-                });
+            onPressed: () async {
+              final newGoal = int.tryParse(_goalController.text);
+              if (newGoal != null && newGoal > 0 && newGoal <= 1000) {
+                await _appState.updateReadingGoal(newGoal);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Meta atualizada para $newGoal livros!'),
+                  const SnackBar(
+                    content: Text('Meta atualizada com sucesso!'),
                     backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Meta inválida'),
+                    backgroundColor: Colors.red,
                   ),
                 );
               }
